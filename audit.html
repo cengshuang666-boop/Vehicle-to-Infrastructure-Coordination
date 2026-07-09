@@ -261,7 +261,7 @@
             <td>2025-07-08 14:32</td>
             <td><span class="tag tag-blue">AI生成</span></td>
             <td><span class="tag tag-yellow">待审核</span></td>
-            <td><div class="action-btns"><button class="btn btn-success btn-sm">通过</button><button class="btn btn-sm" style="background:var(--red);color:#fff;">拒绝</button></div></td>
+            <td><div class="action-btns"><button class="btn btn-success btn-sm" onclick="auditPass(this)">通过</button><button class="btn btn-sm" style="background:var(--red);color:#fff;" onclick="auditReject(this)">拒绝</button></div></td>
           </tr>
           <tr>
             <td><input type="checkbox"></td>
@@ -288,7 +288,7 @@
             <td>2025-07-08 13:50</td>
             <td><span class="tag tag-blue">AI生成</span></td>
             <td><span class="tag tag-yellow">待审核</span></td>
-            <td><div class="action-btns"><button class="btn btn-success btn-sm">通过</button><button class="btn btn-sm" style="background:var(--red);color:#fff;">拒绝</button></div></td>
+            <td><div class="action-btns"><button class="btn btn-success btn-sm" onclick="auditPass(this)">通过</button><button class="btn btn-sm" style="background:var(--red);color:#fff;" onclick="auditReject(this)">拒绝</button></div></td>
           </tr>
           <tr>
             <td><input type="checkbox"></td>
@@ -394,6 +394,60 @@
     </div>
   </aside>
 </main>
+
+
+<script>
+  function getRow(btn) {
+    return btn.closest('tr');
+  }
+  function getId(row) {
+    return row.querySelector('td:nth-child(2)').textContent.trim();
+  }
+  function updateStats() {
+    const pending = document.querySelectorAll('.tag-yellow').length;
+    const passed = document.querySelectorAll('.tag-green').length;
+    const rejected = document.querySelectorAll('.tag-red').length;
+    const total = pending + passed + rejected;
+    const rate = total > 0 ? ((passed / total) * 100).toFixed(1) : '0.0';
+    document.querySelector('.stat-value.blue').textContent = pending;
+    document.querySelector('.stat-value.green').textContent = 86 + passed - 5;
+    document.querySelector('.stat-value.yellow').textContent = rate + '%';
+    document.querySelector('.stat-value.red').textContent = rejected;
+  }
+  function addLog(id, action, reason) {
+    const now = new Date();
+    const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    const logContainer = document.querySelector('.rs-card');
+    const newLog = document.createElement('div');
+    newLog.className = 'log-item';
+    const statusClass = action === '通过' ? 'pass' : 'reject';
+    newLog.innerHTML = `
+      <div><span class="log-time">${timeStr}</span> ${action} ${id}</div>
+      <div class="log-text">${reason} <span class="log-status ${statusClass}">${action}</span></div>
+    `;
+    logContainer.insertBefore(newLog, logContainer.firstChild);
+  }
+  function auditPass(btn) {
+    const row = getRow(btn);
+    const id = getId(row);
+    const statusCell = row.querySelector('td:nth-child(6)');
+    statusCell.innerHTML = '<span class="tag tag-green">已通过</span>';
+    const actionCell = row.querySelector('td:nth-child(7)');
+    actionCell.innerHTML = '<a href="#" style="color:var(--accent-hover);">查看详情</a>';
+    updateStats();
+    addLog(id, '通过', 'AI标识完整，内容合规');
+  }
+  function auditReject(btn) {
+    const row = getRow(btn);
+    const id = getId(row);
+    const statusCell = row.querySelector('td:nth-child(6)');
+    statusCell.innerHTML = '<span class="tag tag-red">已拒绝</span>';
+    const actionCell = row.querySelector('td:nth-child(7)');
+    actionCell.innerHTML = '<a href="#" style="color:var(--accent-hover);">查看详情</a>';
+    updateStats();
+    addLog(id, '拒绝', '内容不符合审核规则，已退回');
+  }
+</script>
 
 </body>
 </html>
