@@ -57,7 +57,7 @@
     .hero { background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:32px; margin-bottom:24px; position:relative; overflow:hidden; }
     .hero::after { content:""; position:absolute; top:-40px; right:-40px; width:200px; height:200px; background:var(--accent); opacity:0.06; border-radius:50%; }
     .hero h1 { font-size:28px; font-weight:700; margin-bottom:8px; }
-    .hero p { color:var(--text-secondary); font-size:15px; max-width:600px; }
+    .hero p { color:var(--text-secondary); font-size:15px; max-width:640px; }
     .hero-btns { display:flex; gap:12px; margin-top:20px; }
     .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 18px; border-radius:6px; font-size:14px; cursor:pointer; border:none; transition:.15s; font-weight:500; }
     .btn-primary { background:var(--accent); color:#fff; }
@@ -89,17 +89,17 @@
     .mini-stat-value { font-size:22px; font-weight:700; }
     .mini-stat-label { font-size:12px; color:var(--text-secondary); margin-top:2px; }
 
-    /* 作品列表 */
-    .work-item { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); }
-    .work-item:last-child { border-bottom:none; }
-    .work-thumb { width:48px; height:36px; background:var(--bg-hover); border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:14px; }
-    .work-info { flex:1; }
-    .work-name { font-size:13px; font-weight:500; }
-    .work-meta { font-size:12px; color:var(--text-secondary); margin-top:2px; }
-    .work-status { font-size:12px; padding:2px 8px; border-radius:4px; }
-    .work-status.done { background:rgba(35,134,54,0.15); color:var(--green-text); }
-    .work-status.running { background:rgba(47,129,247,0.15); color:var(--tag-text); }
-    .work-status.wait { background:rgba(217,165,20,0.15); color:var(--yellow-text); }
+    /* 任务列表 */
+    .task-item { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); }
+    .task-item:last-child { border-bottom:none; }
+    .task-icon { width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; background:var(--bg-hover); }
+    .task-info { flex:1; }
+    .task-name { font-size:13px; font-weight:500; }
+    .task-meta { font-size:12px; color:var(--text-secondary); margin-top:2px; }
+    .task-status { font-size:12px; padding:2px 8px; border-radius:4px; }
+    .task-status.done { background:rgba(35,134,54,0.15); color:var(--green-text); }
+    .task-status.running { background:rgba(47,129,247,0.15); color:var(--tag-text); }
+    .task-status.wait { background:rgba(217,165,20,0.15); color:var(--yellow-text); }
 
     /* 右侧公告 */
     .notice-item { padding:10px 0; border-bottom:1px solid var(--border); }
@@ -203,10 +203,10 @@
     <!-- 欢迎横幅 -->
     <div class="hero">
       <h1>欢迎回来，机构用户</h1>
-      <p>文博AI宣传视频平台 · 基于多模态深度合成技术，一键生成博物馆、文物主题宣传短视频，支持数字人讲解、AI配音、字幕同步输出。</p>
+      <p>车路协同AI仿真数据生成平台 · 基于BEV特征融合与多源物理增强技术，自动批量合成虚拟交通三维场景、人车混行仿真短视频、多传感器仿真图像及结构化自动驾驶数据集。</p>
       <div class="hero-btns">
-        <button class="btn btn-primary">🎬 新建视频项目</button>
-        <button class="btn btn-secondary">📂 查看我的作品</button>
+        <button class="btn btn-primary">🚗 新建仿真任务</button>
+        <button class="btn btn-secondary">📂 查看我的数据</button>
         <a href="audit.html" class="btn btn-secondary">🔍 进入数据审核</a>
       </div>
     </div>
@@ -214,94 +214,94 @@
     <!-- 统计概览 -->
     <div class="mini-stats">
       <div class="mini-stat">
-        <div class="mini-stat-value" style="color:var(--accent-hover);">128</div>
-        <div class="mini-stat-label">本月生成视频</div>
+        <div class="mini-stat-value" style="color:var(--accent-hover);">1,024</div>
+        <div class="mini-stat-label">本月生成图像</div>
       </div>
       <div class="mini-stat">
-        <div class="mini-stat-value" style="color:var(--green-text);">94.2%</div>
-        <div class="mini-stat-label">审核通过率</div>
+        <div class="mini-stat-value" style="color:var(--green-text);">86</div>
+        <div class="mini-stat-label">仿真视频片段</div>
       </div>
       <div class="mini-stat">
-        <div class="mini-stat-value" style="color:var(--yellow-text);">12</div>
-        <div class="mini-stat-label">待审核项目</div>
+        <div class="mini-stat-value" style="color:var(--yellow-text);">48</div>
+        <div class="mini-stat-label">三维场景</div>
       </div>
       <div class="mini-stat">
-        <div class="mini-stat-value" style="color:var(--red-text);">3</div>
-        <div class="mini-stat-label">今日已拦截</div>
+        <div class="mini-stat-value" style="color:var(--red-text);">5</div>
+        <div class="mini-stat-label">待审核任务</div>
       </div>
     </div>
 
     <!-- 快捷入口 -->
     <div class="quick-grid">
       <div class="quick-card" onclick="location.href='#'">
-        <div class="quick-icon blue">🎬</div>
-        <div class="quick-title">视频合成</div>
-        <div class="quick-desc">输入文案与配音，自动生成宣传短视频</div>
+        <div class="quick-icon blue">🖼</div>
+        <div class="quick-title">道路仿真图像</div>
+        <div class="quick-desc">生成交通场景仿真图像，支持多模态输入</div>
       </div>
       <div class="quick-card" onclick="location.href='#'">
-        <div class="quick-icon green">👤</div>
-        <div class="quick-title">数字人管理</div>
-        <div class="quick-desc">配置虚拟讲解员形象、声线与动作库</div>
+        <div class="quick-icon green">🎬</div>
+        <div class="quick-title">仿真视频合成</div>
+        <div class="quick-desc">人车混行仿真短视频，25fps标准输出</div>
       </div>
       <div class="quick-card" onclick="location.href='#'">
-        <div class="quick-icon orange">🔊</div>
-        <div class="quick-title">音频合成</div>
-        <div class="quick-desc">AI语音合成，支持多声线情感调节</div>
+        <div class="quick-icon orange">🧊</div>
+        <div class="quick-title">三维交通场景</div>
+        <div class="quick-desc">GLB格式三维场景，支持路口/高速/恶劣路况</div>
       </div>
       <div class="quick-card" onclick="location.href='#'">
-        <div class="quick-icon purple">📝</div>
-        <div class="quick-title">字幕生成</div>
-        <div class="quick-desc">自动同步生成SRT字幕文件</div>
+        <div class="quick-icon purple">📊</div>
+        <div class="quick-title">轨迹数据集</div>
+        <div class="quick-desc">结构化CSV轨迹数据，含坐标/速度/信号灯</div>
       </div>
     </div>
 
     <!-- 两栏内容 -->
     <div class="two-col">
-      <!-- 左侧：最近作品 -->
+      <!-- 左侧：最近任务 -->
       <div class="panel">
         <div class="panel-title">
-          <span>📁 最近作品</span>
+          <span>📁 最近生成任务</span>
           <a href="#">查看全部 →</a>
         </div>
-        <div class="work-item">
-          <div class="work-thumb">🖼</div>
-          <div class="work-info">
-            <div class="work-name">博物馆青铜器导览视频</div>
-            <div class="work-meta">WB-20250708-001 · 02:36 · 486 MB</div>
+        <div class="task-item">
+          <div class="task-icon">🖼</div>
+          <div class="task-info">
+            <div class="task-name">Urban_Intersection_024 道路仿真</div>
+            <div class="task-meta">SIM-20250708-001 · 1920×1080 · 8张/秒</div>
           </div>
-          <span class="work-status done">已完成</span>
+          <span class="task-status done">已完成</span>
         </div>
-        <div class="work-item">
-          <div class="work-thumb">🖼</div>
-          <div class="work-info">
-            <div class="work-name">西周文物讲解短片</div>
-            <div class="work-meta">WB-20250708-002 · 01:45 · 312 MB</div>
+        <div class="task-item">
+          <div class="task-icon">🎬</div>
+          <div class="task-info">
+            <div class="task-name">雨雪天气人车混行仿真视频</div>
+            <div class="task-meta">SIM-20250708-002 · 02:36 · 486 MB</div>
           </div>
-          <span class="work-status running">生成中</span>
+          <span class="task-status running">生成中</span>
         </div>
-        <div class="work-item">
-          <div class="work-thumb">🖼</div>
-          <div class="work-info">
-            <div class="work-name">展厅三维场景漫游</div>
-            <div class="work-meta">WB-20250707-089 · 03:20 · 520 MB</div>
+        <div class="task-item">
+          <div class="task-icon">🧊</div>
+          <div class="task-info">
+            <div class="task-name">标准十字路口三维场景</div>
+            <div class="task-meta">SIM-20250708-003 · GLB · 256 MB</div>
           </div>
-          <span class="work-status done">已完成</span>
+          <span class="task-status done">已完成</span>
         </div>
-        <div class="work-item">
-          <div class="work-thumb">🖼</div>
-          <div class="work-info">
-            <div class="work-name">陶瓷器科普宣传片</div>
-            <div class="work-meta">WB-20250707-088 · 待生成</div>
+        <div class="task-item">
+          <div class="task-icon">📊</div>
+          <div class="task-info">
+            <div class="task-name">车辆遮挡对抗场景轨迹数据</div>
+            <div class="task-meta">SIM-20250707-089 · CSV · 500条/秒</div>
           </div>
-          <span class="work-status wait">排队中</span>
+          <span class="task-status done">已完成</span>
         </div>
-        <div class="work-item">
-          <div class="work-thumb">🖼</div>
-          <div class="work-info">
-            <div class="work-name">线上展览开场动画</div>
-            <div class="work-meta">WB-20250707-087 · 00:58 · 186 MB</div>
+        <div class="task-item">
+          <div class="task-icon">🖼</div>
+          <div class="task-info">
+            <div class="task-name">传感器攻击干扰场景图像</div>
+            <div class="task-meta">SIM-20250707-088 · 待生成</div>
           </div>
-          <span class="work-status done">已完成</span>
+          <span class="task-status wait">排队中</span>
         </div>
       </div>
 
@@ -312,17 +312,17 @@
           <div class="panel-title">📢 平台公告</div>
           <div class="notice-item">
             <span class="notice-tag sys">系统</span>
-            <span class="notice-text">数据审核系统升级完成，新增历史事实校验模块</span>
+            <span class="notice-text">BEV-Fusion-Traffic V0.5 模型上线，多模态对齐精度提升 12%</span>
             <div class="notice-time">2025-07-08 10:00</div>
           </div>
           <div class="notice-item">
             <span class="notice-tag update">更新</span>
-            <span class="notice-text">数字人模型 Avatar-V1.2 上线，支持更多手势动作</span>
+            <span class="notice-text">新增雨雪雾恶劣路况场景模板，支持动态天气参数调节</span>
             <div class="notice-time">2025-07-07 16:30</div>
           </div>
           <div class="notice-item">
             <span class="notice-tag sys">系统</span>
-            <span class="notice-text">TTS-V3.0 语音合成引擎优化，延迟降低至 500ms</span>
+            <span class="notice-text">对抗防御学习模块 Traffic-QAD V0.5 部署完成</span>
             <div class="notice-time">2025-07-05 09:00</div>
           </div>
         </div>
@@ -334,22 +334,22 @@
             <div class="guide-step">
               <div class="guide-step-num">1</div>
               <div class="guide-step-title">上传素材</div>
-              <div class="guide-step-desc">文案/图片/音频</div>
+              <div class="guide-step-desc">实景图/轨迹/参数</div>
             </div>
             <div class="guide-step">
               <div class="guide-step-num">2</div>
-              <div class="guide-step-title">选择模板</div>
-              <div class="guide-step-desc">数字人/场景</div>
+              <div class="guide-step-title">配置场景</div>
+              <div class="guide-step-desc">路口/高速/天气</div>
             </div>
             <div class="guide-step">
               <div class="guide-step-num">3</div>
               <div class="guide-step-title">AI生成</div>
-              <div class="guide-step-desc">等待合成</div>
+              <div class="guide-step-desc">多模态合成</div>
             </div>
             <div class="guide-step">
               <div class="guide-step-num">4</div>
-              <div class="guide-step-title">下载导出</div>
-              <div class="guide-step-desc">视频/字幕</div>
+              <div class="guide-step-title">导出数据</div>
+              <div class="guide-step-desc">图像/视频/CSV</div>
             </div>
           </div>
         </div>
