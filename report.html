@@ -98,6 +98,13 @@
     .faq-q { font-size:13px; color:var(--text-primary); cursor:pointer; }
     .faq-q:hover { color:var(--accent-hover); }
     .faq-q::before { content:">"; color:var(--text-secondary); margin-right:6px; font-size:11px; }
+    .file-list { margin-top:10px; display:flex; flex-direction:column; gap:6px; }
+    .file-item { display:flex; align-items:center; gap:8px; background:var(--bg-hover); border:1px solid var(--border); border-radius:6px; padding:6px 10px; font-size:12px; }
+    .file-item-name { flex:1; color:var(--text-primary); }
+    .file-item-remove { color:var(--red-text); cursor:pointer; font-size:14px; }
+    .submit-result { margin-top:12px; padding:10px 14px; border-radius:6px; font-size:13px; display:none; }
+    .submit-result.success { background:rgba(35,134,54,0.1); border:1px solid rgba(35,134,54,0.3); color:var(--green-text); }
+    .submit-result.error { background:rgba(218,54,51,0.1); border:1px solid rgba(218,54,51,0.3); color:var(--red-text); }
   </style>
 </head>
 <body>
@@ -184,52 +191,127 @@
 
     <!-- 标签页 -->
     <div class="tabs">
-      <div class="tab active">内容举报</div>
-      <div class="tab">用户反馈</div>
-      <div class="tab">投诉建议</div>
+      <div class="tab active" data-tab="report" onclick="switchTab('report')">内容举报</div>
+      <div class="tab" data-tab="feedback" onclick="switchTab('feedback')">用户反馈</div>
+      <div class="tab" data-tab="complaint" onclick="switchTab('complaint')">投诉建议</div>
     </div>
 
-    <!-- 表单 -->
-    <div class="form-card">
-      <div class="form-group">
-        <label class="form-label">仿真内容ID</label>
-        <input type="text" class="form-input" placeholder="输入仿真内容ID（可选）">
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">举报类型 <span class="required">*</span></label>
-        <select class="form-select">
-          <option>请选择举报类型</option>
-          <option>仿真数据异常</option>
-          <option>轨迹数据不合理</option>
-          <option>违规内容</option>
-          <option>物理规则错误</option>
-          <option>交通场景不符合规范</option>
-          <option>其他问题</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">问题描述 <span class="required">*</span></label>
-        <textarea class="form-textarea" placeholder="请详细描述您认为仿真内容存在的问题..."></textarea>
-        <div class="form-hint" style="text-align:right;">0 / 500</div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">关联截图（可选）</label>
-        <div class="upload-area">
-          <div class="upload-icon">+</div>
-          <div class="upload-text">点击上传截图</div>
+    <!-- 表单面板 -->
+    <div id="panel-report" class="tab-panel" style="display:block;">
+      <div class="form-card">
+        <div class="form-group">
+          <label class="form-label">仿真内容ID</label>
+          <input type="text" class="form-input" id="r-id" placeholder="输入仿真内容ID（可选）">
         </div>
+        <div class="form-group">
+          <label class="form-label">举报类型 <span class="required">*</span></label>
+          <select class="form-select" id="r-type">
+            <option value="">请选择举报类型</option>
+            <option>仿真数据异常</option>
+            <option>轨迹数据不合理</option>
+            <option>违规内容</option>
+            <option>物理规则错误</option>
+            <option>交通场景不符合规范</option>
+            <option>其他问题</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">问题描述 <span class="required">*</span></label>
+          <textarea class="form-textarea" id="r-desc" placeholder="请详细描述您认为仿真内容存在的问题..."></textarea>
+          <div class="form-hint" style="text-align:right;"><span id="r-count">0</span> / 500</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">关联截图（可选）</label>
+          <div class="upload-area" onclick="document.getElementById('r-file').click()">
+            <div class="upload-icon">+</div>
+            <div class="upload-text">点击上传截图</div>
+          </div>
+          <input type="file" id="r-file" accept="image/*" multiple style="display:none;" onchange="handleFileSelect(this, 'r-files')">
+          <div class="file-list" id="r-files"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">联系方式（选填）</label>
+          <input type="text" class="form-input" id="r-contact" placeholder="手机 / 邮箱 / 企业微信">
+          <div class="form-hint" style="color:var(--red);">如需后续跟进，请至少提供一种联系方式</div>
+        </div>
+        <button class="btn btn-primary btn-block" onclick="submitForm('举报')">提交举报</button>
+        <div class="submit-result" id="r-result"></div>
       </div>
+    </div>
 
-      <div class="form-group">
-        <label class="form-label">联系方式（选填）</label>
-        <input type="text" class="form-input" placeholder="手机 / 邮箱 / 企业微信">
-        <div class="form-hint" style="color:var(--red);">如需后续跟进，请至少提供一种联系方式</div>
+    <div id="panel-feedback" class="tab-panel" style="display:none;">
+      <div class="form-card">
+        <div class="form-group">
+          <label class="form-label">反馈类型 <span class="required">*</span></label>
+          <select class="form-select" id="f-type">
+            <option value="">请选择反馈类型</option>
+            <option>功能建议</option>
+            <option>使用体验</option>
+            <option>界面问题</option>
+            <option>性能问题</option>
+            <option>文档错误</option>
+            <option>其他</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">反馈内容 <span class="required">*</span></label>
+          <textarea class="form-textarea" id="f-desc" placeholder="请详细描述您的使用体验或建议..."></textarea>
+          <div class="form-hint" style="text-align:right;"><span id="f-count">0</span> / 500</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">关联截图（可选）</label>
+          <div class="upload-area" onclick="document.getElementById('f-file').click()">
+            <div class="upload-icon">+</div>
+            <div class="upload-text">点击上传截图</div>
+          </div>
+          <input type="file" id="f-file" accept="image/*" multiple style="display:none;" onchange="handleFileSelect(this, 'f-files')">
+          <div class="file-list" id="f-files"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">联系方式（选填）</label>
+          <input type="text" class="form-input" id="f-contact" placeholder="手机 / 邮箱 / 企业微信">
+        </div>
+        <button class="btn btn-primary btn-block" onclick="submitForm('反馈')">提交反馈</button>
+        <div class="submit-result" id="f-result"></div>
       </div>
+    </div>
 
-      <button class="btn btn-primary btn-block">提交举报</button>
+    <div id="panel-complaint" class="tab-panel" style="display:none;">
+      <div class="form-card">
+        <div class="form-group">
+          <label class="form-label">投诉类型 <span class="required">*</span></label>
+          <select class="form-select" id="c-type">
+            <option value="">请选择投诉类型</option>
+            <option>服务态度</option>
+            <option>数据安全</option>
+            <option>隐私泄露</option>
+            <option>审核不公</option>
+            <option>功能缺陷</option>
+            <option>其他</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">投诉内容 <span class="required">*</span></label>
+          <textarea class="form-textarea" id="c-desc" placeholder="请详细描述您的投诉内容..."></textarea>
+          <div class="form-hint" style="text-align:right;"><span id="c-count">0</span> / 500</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">关联截图（可选）</label>
+          <div class="upload-area" onclick="document.getElementById('c-file').click()">
+            <div class="upload-icon">+</div>
+            <div class="upload-text">点击上传截图</div>
+          </div>
+          <input type="file" id="c-file" accept="image/*" multiple style="display:none;" onchange="handleFileSelect(this, 'c-files')">
+          <div class="file-list" id="c-files"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">联系方式（选填）</label>
+          <input type="text" class="form-input" id="c-contact" placeholder="手机 / 邮箱 / 企业微信">
+          <div class="form-hint" style="color:var(--red);">如需后续跟进，请至少提供一种联系方式</div>
+        </div>
+        <button class="btn btn-primary btn-block" onclick="submitForm('投诉')">提交投诉</button>
+        <div class="submit-result" id="c-result"></div>
+      </div>
     </div>
   </div>
 
@@ -268,11 +350,70 @@
 </main>
 
 <script>
-  // 标签页切换
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
+  function switchTab(tabName) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('.tab[data-tab="' + tabName + '"]').classList.add('active');
+    document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+    document.getElementById('panel-' + tabName).style.display = 'block';
+  }
+
+  function handleFileSelect(input, listId) {
+    const container = document.getElementById(listId);
+    const files = Array.from(input.files);
+    files.forEach(file => {
+      const size = file.size < 1024*1024 ? (file.size/1024).toFixed(1)+' KB' : (file.size/(1024*1024)).toFixed(1)+' MB';
+      const div = document.createElement('div');
+      div.className = 'file-item';
+      div.innerHTML = '<span class="file-item-name">' + file.name + ' (' + size + ')</span><span class="file-item-remove" onclick="this.parentElement.remove()">&times;</span>';
+      container.appendChild(div);
+    });
+    input.value = '';
+  }
+
+  function submitForm(typeName) {
+    const tabName = typeName === '举报' ? 'report' : typeName === '反馈' ? 'feedback' : 'complaint';
+    const typeEl = document.getElementById(tabName[0] + '-type');
+    const descEl = document.getElementById(tabName[0] + '-desc');
+    const resultEl = document.getElementById(tabName[0] + '-result');
+
+    if (typeEl && !typeEl.value) {
+      resultEl.className = 'submit-result error';
+      resultEl.textContent = '请选择' + typeName + '类型';
+      resultEl.style.display = 'block';
+      return;
+    }
+    if (descEl && !descEl.value.trim()) {
+      resultEl.className = 'submit-result error';
+      resultEl.textContent = '请填写' + typeName + '内容';
+      resultEl.style.display = 'block';
+      return;
+    }
+
+    resultEl.className = 'submit-result success';
+    resultEl.textContent = '✅ ' + typeName + '提交成功！我们将在3个工作日内处理并反馈结果。';
+    resultEl.style.display = 'block';
+
+    // Clear form after 2 seconds
+    setTimeout(() => {
+      if (typeEl) typeEl.value = '';
+      if (descEl) descEl.value = '';
+      const contactEl = document.getElementById(tabName[0] + '-contact');
+      if (contactEl) contactEl.value = '';
+      const idEl = document.getElementById(tabName[0] + '-id');
+      if (idEl) idEl.value = '';
+      const fileList = document.getElementById(tabName[0] + '-files');
+      if (fileList) fileList.innerHTML = '';
+      resultEl.style.display = 'none';
+    }, 2000);
+  }
+
+  // Character count for textareas
+  ['r-desc', 'f-desc', 'c-desc'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', () => {
+      const countEl = document.getElementById(id.split('-')[0] + '-count');
+      if (countEl) countEl.textContent = el.value.length;
     });
   });
 </script>
