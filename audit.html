@@ -232,9 +232,9 @@
     <div class="filter-bar">
       <select id="filter-status" onchange="applyFilter()"><option value="">审核状态</option><option value="待审核">待审核</option><option value="已通过">已通过</option><option value="已拒绝">已拒绝</option></select>
       <select id="filter-type" onchange="applyFilter()"><option value="">内容模态</option><option value="">全部</option><option value="道路仿真图像">道路仿真图像</option><option value="视频">视频</option><option value="三维场景">三维场景</option><option value="轨迹数据">轨迹数据</option></select>
-      <input type="date" id="filter-date-start" value="2025-06-01" onchange="applyFilter()">
+      <input type="date" id="filter-date-start" value="" onchange="applyFilter()">
       <span style="color:var(--text-secondary);font-size:13px;">至</span>
-      <input type="date" id="filter-date-end" value="2025-07-08" onchange="applyFilter()">
+      <input type="date" id="filter-date-end" value="" onchange="applyFilter()">
       <input type="text" id="filter-search" placeholder="搜索内容ID、模态类型..." oninput="applyFilter()">
       <button class="btn btn-success" onclick="batchPass()">✓ 批量通过</button>
     </div>
