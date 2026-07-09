@@ -232,9 +232,11 @@
     <div class="filter-bar">
       <select id="filter-status" onchange="applyFilter()"><option value="">审核状态</option><option value="待审核">待审核</option><option value="已通过">已通过</option><option value="已拒绝">已拒绝</option></select>
       <select id="filter-type" onchange="applyFilter()"><option value="">内容模态</option><option value="">全部</option><option value="道路仿真图像">道路仿真图像</option><option value="视频">视频</option><option value="三维场景">三维场景</option><option value="轨迹数据">轨迹数据</option></select>
-      <input type="date" id="filter-date-start" value="" onchange="applyFilter()">
+      <input type="text" id="filter-date-start-text" placeholder="年/月/日" readonly onclick="document.getElementById('filter-date-start').click()" style="background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:7px 12px;color:var(--text-primary);font-size:13px;outline:none;width:130px;cursor:pointer;">
+      <input type="date" id="filter-date-start" style="display:none;" onchange="formatDate(this,'filter-date-start-text');applyFilter();">
       <span style="color:var(--text-secondary);font-size:13px;">至</span>
-      <input type="date" id="filter-date-end" value="" onchange="applyFilter()">
+      <input type="text" id="filter-date-end-text" placeholder="年/月/日" readonly onclick="document.getElementById('filter-date-end').click()" style="background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:7px 12px;color:var(--text-primary);font-size:13px;outline:none;width:130px;cursor:pointer;">
+      <input type="date" id="filter-date-end" style="display:none;" onchange="formatDate(this,'filter-date-end-text');applyFilter();">
       <input type="text" id="filter-search" placeholder="搜索内容ID、模态类型..." oninput="applyFilter()">
       <button class="btn" style="background:var(--bg-hover);color:var(--text-primary);border:1px solid var(--border);" onclick="resetFilter()">⟲ 重置筛选</button>
       <button class="btn btn-success" onclick="batchPass()">✓ 批量通过</button>
@@ -510,11 +512,20 @@
     });
   }
 
+  function formatDate(dateInput, textId) {
+    const textInput = document.getElementById(textId);
+    if (!dateInput.value) { textInput.value = ''; return; }
+    const parts = dateInput.value.split('-');
+    textInput.value = parts[0] + '年' + parts[1] + '月' + parts[2] + '日';
+  }
+
   function resetFilter() {
     document.getElementById('filter-status').value = '';
     document.getElementById('filter-type').value = '';
     document.getElementById('filter-date-start').value = '';
+    document.getElementById('filter-date-start-text').value = '';
     document.getElementById('filter-date-end').value = '';
+    document.getElementById('filter-date-end-text').value = '';
     document.getElementById('filter-search').value = '';
     applyFilter();
   }
@@ -522,7 +533,9 @@
   function initRows() {
     // Force clear date inputs to prevent browser autofill from filtering out old data
     document.getElementById('filter-date-start').value = '';
+    document.getElementById('filter-date-start-text').value = '';
     document.getElementById('filter-date-end').value = '';
+    document.getElementById('filter-date-end-text').value = '';
     loadGeneratedData();
     addDeleteButtons();
     const tbody = document.getElementById('audit-table-body');
