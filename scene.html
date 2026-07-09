@@ -195,13 +195,62 @@
         </div>
       </div>
       <div style="margin-top:10px;">
-        <button class="btn btn-primary">🚀 生成三维场景</button>
-        <button class="btn btn-secondary" style="margin-left:8px;">📤 导入 OpenDRIVE</button>
+        <button class="btn btn-primary" id="gen-btn" onclick="startGenerate()">🚀 生成三维场景</button>
+        <button class="btn btn-secondary" style="margin-left:8px;" id="import-btn" onclick="importOpenDrive()">📤 导入 OpenDRIVE</button>
+        <input type="file" id="import-input" accept=".xodr,.xml" style="display:none;" onchange="handleImport(event)">
+        <div class="progress-wrap" id="progress-wrap" style="margin-top:16px;display:none;">
+          <div class="progress-bar" style="height:8px;background:var(--bg-hover);border-radius:4px;overflow:hidden;"><div class="progress-fill" id="progress-fill" style="height:100%;background:var(--accent);width:0%;transition:width 0.3s;border-radius:4px;"></div></div>
+          <div class="progress-text" id="progress-text" style="font-size:12px;color:var(--text-secondary);margin-top:6px;">准备生成...</div>
+        </div>
+        <div class="gen-result" id="gen-result" style="margin-top:16px;padding:12px 16px;background:rgba(35,134,54,0.1);border:1px solid rgba(35,134,54,0.3);border-radius:6px;color:var(--green-text);font-size:13px;display:none;"></div>
       </div>
     </div>
 
   </div>
 </main>
 
+<script>
+  function startGenerate() {
+    const btn = document.getElementById('gen-btn');
+    const progressWrap = document.getElementById('progress-wrap');
+    const progressFill = document.getElementById('progress-fill');
+    const progressText = document.getElementById('progress-text');
+    const genResult = document.getElementById('gen-result');
+    if (btn.disabled) return;
+    btn.disabled = true;
+    btn.innerHTML = '⏳ 生成中...';
+    progressWrap.style.display = 'block';
+    genResult.style.display = 'none';
+    let progress = 0;
+    progressFill.style.width = '0%';
+    progressText.textContent = '准备生成...';
+    const interval = setInterval(() => {
+      progress += Math.random() * 10 + 3;
+      if (progress > 100) progress = 100;
+      progressFill.style.width = progress + '%';
+      if (progress < 30) progressText.textContent = '正在构建道路拓扑...';
+      else if (progress < 60) progressText.textContent = '正在生成材质与光照...';
+      else if (progress < 90) progressText.textContent = '正在导出GLB格式...';
+      else progressText.textContent = '即将完成...';
+      if (progress >= 100) {
+        clearInterval(interval);
+        btn.disabled = false;
+        btn.innerHTML = '🚀 生成三维场景';
+        genResult.innerHTML = '✅ 生成完成！GLB 文件已就绪，大小约 128MB，可直接导入 Unity / Unreal';
+        genResult.style.display = 'block';
+        setTimeout(() => { progressWrap.style.display = 'none'; }, 800);
+      }
+    }, 400);
+  }
+  function importOpenDrive() {
+    document.getElementById('import-input').click();
+  }
+  function handleImport(e) {
+    const file = e.target.files[0];
+    if (file) {
+      alert('已选择 OpenDRIVE 文件：' + file.name + '，导入解析成功');
+    }
+  }
+</script>
 </body>
 </html>

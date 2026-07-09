@@ -79,6 +79,17 @@
     .upload-area:hover { border-color:var(--accent); color:var(--accent-hover); }
     .upload-icon { font-size:28px; }
     .param-row { display:grid; grid-template-columns:repeat(2, 1fr); gap:16px; }
+    .file-list { margin-top:12px; display:flex; flex-direction:column; gap:8px; }
+    .file-item { display:flex; align-items:center; gap:10px; background:var(--bg-hover); border:1px solid var(--border); border-radius:6px; padding:8px 12px; font-size:13px; }
+    .file-item-name { flex:1; color:var(--text-primary); }
+    .file-item-size { color:var(--text-secondary); font-size:12px; }
+    .file-item-remove { color:var(--red-text); cursor:pointer; font-size:16px; line-height:1; }
+    .file-item-remove:hover { color:var(--red); }
+    .progress-wrap { margin-top:16px; display:none; }
+    .progress-bar { height:8px; background:var(--bg-hover); border-radius:4px; overflow:hidden; }
+    .progress-fill { height:100%; background:var(--accent); width:0%; transition:width 0.3s; border-radius:4px; }
+    .progress-text { font-size:12px; color:var(--text-secondary); margin-top:6px; }
+    .gen-result { margin-top:16px; padding:12px 16px; background:rgba(35,134,54,0.1); border:1px solid rgba(35,134,54,0.3); border-radius:6px; color:var(--green-text); font-size:13px; display:none; }
 
   </style>
 </head>
@@ -171,10 +182,12 @@
     <div class="panel">
       <div class="panel-title">输入素材（可选）</div>
       <div class="form-group">
-        <div class="upload-area">
+        <div class="upload-area" onclick="document.getElementById('file-input').click()">
           <div class="upload-icon">+</div>
           <div style="font-size:13px;">点击上传实景图 / BEV特征图 / 语义分割图</div>
         </div>
+        <input type="file" id="file-input" multiple accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
+        <div class="file-list" id="file-list"></div>
       </div>
     </div>
 
@@ -208,11 +221,72 @@
           <select class="form-select"><option>PNG</option><option>JPG</option><option>TIFF</option></select>
         </div>
       </div>
-      <button class="btn btn-primary">🚀 开始生成</button>
+      <button class="btn btn-primary" id="gen-btn" onclick="startGenerate()">🚀 开始生成</button>
+      <div class="progress-wrap" id="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="progress-text" id="progress-text">准备生成...</div>
+      </div>
+      <div class="gen-result" id="gen-result"></div>
     </div>
 
   </div>
 </main>
 
+<script>
+  let selectedFiles = [];
+  function handleFileSelect(e) {
+    const files = Array.from(e.target.files);
+    files.forEach(file => {
+      if (!selectedFiles.find(f => f.name === file.name && f.size === file.size)) {
+        selectedFiles.push(file);
+      }
+    });
+    renderFileList();
+  }
+  function renderFileList() {
+    const container = document.getElementById('file-list');
+    if (!selectedFiles.length) { container.innerHTML = ''; return; }
+    container.innerHTML = selectedFiles.map((file, idx) => {
+      const size = file.size < 1024*1024 ? (file.size/1024).toFixed(1)+' KB' : (file.size/(1024*1024)).toFixed(1)+' MB';
+      return `<div class="file-item"><span class="file-item-name">${file.name}</span><span class="file-item-size">${size}</span><span class="file-item-remove" onclick="removeFile(${idx})">&times;</span></div>`;
+    }).join('');
+  }
+  function removeFile(idx) {
+    selectedFiles.splice(idx, 1);
+    renderFileList();
+  }
+  function startGenerate() {
+    const btn = document.getElementById('gen-btn');
+    const progressWrap = document.getElementById('progress-wrap');
+    const progressFill = document.getElementById('progress-fill');
+    const progressText = document.getElementById('progress-text');
+    const genResult = document.getElementById('gen-result');
+    if (btn.disabled) return;
+    btn.disabled = true;
+    btn.innerHTML = '⏳ 生成中...';
+    progressWrap.style.display = 'block';
+    genResult.style.display = 'none';
+    let progress = 0;
+    progressFill.style.width = '0%';
+    progressText.textContent = '准备生成...';
+    const interval = setInterval(() => {
+      progress += Math.random() * 15 + 5;
+      if (progress > 100) progress = 100;
+      progressFill.style.width = progress + '%';
+      if (progress < 30) progressText.textContent = '正在加载AI模型...';
+      else if (progress < 60) progressText.textContent = '正在推理生成图像...';
+      else if (progress < 90) progressText.textContent = '正在后处理与质量校验...';
+      else progressText.textContent = '即将完成...';
+      if (progress >= 100) {
+        clearInterval(interval);
+        btn.disabled = false;
+        btn.innerHTML = '🚀 开始生成';
+        genResult.innerHTML = '✅ 生成完成！已生成 <strong>10</strong> 张道路仿真图像，输出格式 PNG，分辨率 1920×1080';
+        genResult.style.display = 'block';
+        setTimeout(() => { progressWrap.style.display = 'none'; }, 800);
+      }
+    }, 300);
+  }
+</script>
 </body>
 </html>
