@@ -232,9 +232,9 @@
     <div class="filter-bar">
       <select id="filter-status" onchange="applyFilter()"><option value="">审核状态</option><option value="待审核">待审核</option><option value="已通过">已通过</option><option value="已拒绝">已拒绝</option></select>
       <select id="filter-type" onchange="applyFilter()"><option value="">内容模态</option><option value="">全部</option><option value="道路仿真图像">道路仿真图像</option><option value="视频">视频</option><option value="三维场景">三维场景</option><option value="轨迹数据">轨迹数据</option></select>
-      <input type="date" value="2025-06-01">
+      <input type="date" id="filter-date-start" value="2025-06-01" onchange="applyFilter()">
       <span style="color:var(--text-secondary);font-size:13px;">至</span>
-      <input type="date" value="2025-07-08">
+      <input type="date" id="filter-date-end" value="2025-07-08" onchange="applyFilter()">
       <input type="text" id="filter-search" placeholder="搜索内容ID、模态类型..." oninput="applyFilter()">
       <button class="btn btn-success" onclick="batchPass()">✓ 批量通过</button>
     </div>
@@ -244,7 +244,7 @@
       <table>
         <thead>
           <tr>
-            <th style="width:40px;"><input type="checkbox"></th>
+            <th style="width:40px;"><input type="checkbox" id="select-all" onclick="toggleSelectAll()"></th>
             <th>内容ID</th>
             <th>模态类型</th>
             <th>生成时间</th>
@@ -332,13 +332,9 @@
       <div class="pagination" id="pagination-bar">
         <span id="page-info">共 8 条记录</span>
         <button class="page-btn" id="page-prev" onclick="changePage(-1)">&lt;</button>
-        <button class="page-btn active" id="page-1" onclick="goPage(1)">1</button>
-        <button class="page-btn" id="page-2" onclick="goPage(2)">2</button>
-        <button class="page-btn" id="page-3" onclick="goPage(3)">3</button>
-        <span style="color:var(--text-secondary);">...</span>
-        <button class="page-btn" id="page-last" onclick="goPage(totalPages)">1</button>
+        <span id="page-numbers"></span>
         <button class="page-btn" id="page-next" onclick="changePage(1)">&gt;</button>
-        <span>每页 10 条</span>
+        <span id="page-size-label">每页 5 条</span>
       </div>
     </div>
   </div>
@@ -459,20 +455,30 @@
     renderPage();
   }
 
+  function parseRowDate(row) {
+    const dateText = row.querySelector('td:nth-child(4)').textContent.trim();
+    return dateText.split(' ')[0];
+  }
+
   function applyFilter() {
     const statusVal = document.getElementById('filter-status').value;
     const typeVal = document.getElementById('filter-type').value;
     const searchVal = document.getElementById('filter-search').value.trim().toLowerCase();
+    const dateStart = document.getElementById('filter-date-start').value;
+    const dateEnd = document.getElementById('filter-date-end').value;
 
     filteredRows = allRows.filter(row => {
       const cells = row.querySelectorAll('td');
       const id = cells[1].textContent.trim();
       const type = cells[2].textContent.trim();
       const status = cells[5].textContent.trim();
+      const rowDate = parseRowDate(row);
 
       if (statusVal && !status.includes(statusVal)) return false;
       if (typeVal && !type.includes(typeVal)) return false;
       if (searchVal && !id.toLowerCase().includes(searchVal) && !type.toLowerCase().includes(searchVal)) return false;
+      if (dateStart && rowDate < dateStart) return false;
+      if (dateEnd && rowDate > dateEnd) return false;
       return true;
     });
 
@@ -493,12 +499,57 @@
     // Update pagination info
     totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
     document.getElementById('page-info').textContent = `共 ${filteredRows.length} 条记录`;
-    document.getElementById('page-last').textContent = totalPages;
+    document.getElementById('page-size-label').textContent = `每页 ${pageSize} 条`;
 
-    // Update active page button
-    document.querySelectorAll('#pagination-bar .page-btn').forEach(btn => btn.classList.remove('active'));
-    const activeBtn = document.getElementById('page-' + currentPage);
-    if (activeBtn) activeBtn.classList.add('active');
+    // Update select-all checkbox state
+    const selectAll = document.getElementById('select-all');
+    if (selectAll) selectAll.checked = false;
+
+    // Dynamically render page number buttons
+    renderPageNumbers();
+  }
+
+  function renderPageNumbers() {
+    const container = document.getElementById('page-numbers');
+    if (!container) return;
+    let html = '';
+
+    // Simple logic: show all pages if <= 7, otherwise show first+last with ellipsis
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) {
+        html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+      }
+    } else {
+      // Always show page 1
+      html += `<button class="page-btn ${1 === currentPage ? 'active' : ''}" onclick="goPage(1)">1</button>`;
+
+      if (currentPage > 3) {
+        html += `<span style="color:var(--text-secondary);">...</span>`;
+      }
+
+      let startPage = Math.max(2, currentPage - 1);
+      let endPage = Math.min(totalPages - 1, currentPage + 1);
+
+      if (currentPage <= 3) {
+        startPage = 2;
+        endPage = 4;
+      } else if (currentPage >= totalPages - 2) {
+        startPage = totalPages - 3;
+        endPage = totalPages - 1;
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+      }
+
+      if (currentPage < totalPages - 2) {
+        html += `<span style="color:var(--text-secondary);">...</span>`;
+      }
+
+      html += `<button class="page-btn ${totalPages === currentPage ? 'active' : ''}" onclick="goPage(${totalPages})">${totalPages}</button>`;
+    }
+
+    container.innerHTML = html;
   }
 
   function goPage(p) {
@@ -512,20 +563,39 @@
     goPage(currentPage + delta);
   }
 
-  function batchPass() {
-    const checkboxes = document.querySelectorAll('#audit-table-body input[type="checkbox"]:checked');
+  function toggleSelectAll() {
+    const selectAll = document.getElementById('select-all');
+    const checkboxes = document.querySelectorAll('#audit-table-body input[type="checkbox"]');
     checkboxes.forEach(cb => {
       const row = cb.closest('tr');
+      if (row && row.style.display !== 'none') {
+        cb.checked = selectAll.checked;
+      }
+    });
+  }
+
+  function batchPass() {
+    const checkboxes = document.querySelectorAll('#audit-table-body input[type="checkbox"]:checked');
+    let count = 0;
+    checkboxes.forEach(cb => {
+      const row = cb.closest('tr');
+      // Only process visible rows
+      if (!row || row.style.display === 'none') return;
       const status = row.querySelector('td:nth-child(6)').textContent.trim();
       if (status.includes('待审核')) {
         const id = row.querySelector('td:nth-child(2)').textContent.trim();
         row.querySelector('td:nth-child(6)').innerHTML = '<span class="tag tag-green">已通过</span>';
         row.querySelector('td:nth-child(7)').innerHTML = '<a href="#" style="color:var(--accent-hover);">查看详情</a>';
         addLog(id, '通过', '批量审核通过');
+        count++;
       }
+      cb.checked = false;
     });
     updateStats();
     applyFilter();
+    if (count === 0) {
+      alert('没有选中的待审核项');
+    }
   }
 
   // Init
