@@ -230,13 +230,13 @@
 
     <!-- 筛选栏 -->
     <div class="filter-bar">
-      <select><option>审核状态</option><option>待审核</option><option>已通过</option><option>已拒绝</option></select>
-      <select><option>内容模态</option><option>全部</option><option>道路仿真图像</option><option>视频</option><option>三维场景</option><option>轨迹数据</option></select>
+      <select id="filter-status" onchange="applyFilter()"><option value="">审核状态</option><option value="待审核">待审核</option><option value="已通过">已通过</option><option value="已拒绝">已拒绝</option></select>
+      <select id="filter-type" onchange="applyFilter()"><option value="">内容模态</option><option value="">全部</option><option value="道路仿真图像">道路仿真图像</option><option value="视频">视频</option><option value="三维场景">三维场景</option><option value="轨迹数据">轨迹数据</option></select>
       <input type="date" value="2025-06-01">
       <span style="color:var(--text-secondary);font-size:13px;">至</span>
       <input type="date" value="2025-07-08">
-      <input type="text" placeholder="搜索内容ID、模态类型...">
-      <button class="btn btn-success">✓ 批量通过</button>
+      <input type="text" id="filter-search" placeholder="搜索内容ID、模态类型..." oninput="applyFilter()">
+      <button class="btn btn-success" onclick="batchPass()">✓ 批量通过</button>
     </div>
 
     <!-- 数据表格 -->
@@ -253,7 +253,7 @@
             <th>操作</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="audit-table-body">
           <tr>
             <td><input type="checkbox"></td>
             <td>SIM-20250708-001</td>
@@ -329,15 +329,15 @@
         </tbody>
       </table>
       <!-- 分页 -->
-      <div class="pagination">
-        <span>共 128 条记录</span>
-        <button class="page-btn">&lt;</button>
-        <button class="page-btn active">1</button>
-        <button class="page-btn">2</button>
-        <button class="page-btn">3</button>
+      <div class="pagination" id="pagination-bar">
+        <span id="page-info">共 8 条记录</span>
+        <button class="page-btn" id="page-prev" onclick="changePage(-1)">&lt;</button>
+        <button class="page-btn active" id="page-1" onclick="goPage(1)">1</button>
+        <button class="page-btn" id="page-2" onclick="goPage(2)">2</button>
+        <button class="page-btn" id="page-3" onclick="goPage(3)">3</button>
         <span style="color:var(--text-secondary);">...</span>
-        <button class="page-btn">13</button>
-        <button class="page-btn">&gt;</button>
+        <button class="page-btn" id="page-last" onclick="goPage(totalPages)">1</button>
+        <button class="page-btn" id="page-next" onclick="changePage(1)">&gt;</button>
         <span>每页 10 条</span>
       </div>
     </div>
@@ -397,12 +397,9 @@
 
 
 <script>
-  function getRow(btn) {
-    return btn.closest('tr');
-  }
-  function getId(row) {
-    return row.querySelector('td:nth-child(2)').textContent.trim();
-  }
+  // ===== Audit action functions =====
+  function getRow(btn) { return btn.closest('tr'); }
+  function getId(row) { return row.querySelector('td:nth-child(2)').textContent.trim(); }
   function updateStats() {
     const pending = document.querySelectorAll('.tag-yellow').length;
     const passed = document.querySelectorAll('.tag-green').length;
@@ -417,14 +414,12 @@
   function addLog(id, action, reason) {
     const now = new Date();
     const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-    const logContainer = document.querySelector('.rs-card');
+    const containers = document.querySelectorAll('.rs-card');
+    const logContainer = containers[1];
     const newLog = document.createElement('div');
     newLog.className = 'log-item';
     const statusClass = action === '通过' ? 'pass' : 'reject';
-    newLog.innerHTML = `
-      <div><span class="log-time">${timeStr}</span> ${action} ${id}</div>
-      <div class="log-text">${reason} <span class="log-status ${statusClass}">${action}</span></div>
-    `;
+    newLog.innerHTML = `<div><span class="log-time">${timeStr}</span> ${action} ${id}</div><div class="log-text">${reason} <span class="log-status ${statusClass}">${action}</span></div>`;
     logContainer.insertBefore(newLog, logContainer.firstChild);
   }
   function auditPass(btn) {
@@ -436,6 +431,7 @@
     actionCell.innerHTML = '<a href="#" style="color:var(--accent-hover);">查看详情</a>';
     updateStats();
     addLog(id, '通过', 'AI标识完整，内容合规');
+    applyFilter();
   }
   function auditReject(btn) {
     const row = getRow(btn);
@@ -446,7 +442,94 @@
     actionCell.innerHTML = '<a href="#" style="color:var(--accent-hover);">查看详情</a>';
     updateStats();
     addLog(id, '拒绝', '内容不符合审核规则，已退回');
+    applyFilter();
   }
+
+  // ===== Filter & Pagination =====
+  let allRows = [];
+  let filteredRows = [];
+  let currentPage = 1;
+  let totalPages = 1;
+  const pageSize = 5;
+
+  function initRows() {
+    const tbody = document.getElementById('audit-table-body');
+    allRows = Array.from(tbody.querySelectorAll('tr'));
+    filteredRows = [...allRows];
+    renderPage();
+  }
+
+  function applyFilter() {
+    const statusVal = document.getElementById('filter-status').value;
+    const typeVal = document.getElementById('filter-type').value;
+    const searchVal = document.getElementById('filter-search').value.trim().toLowerCase();
+
+    filteredRows = allRows.filter(row => {
+      const cells = row.querySelectorAll('td');
+      const id = cells[1].textContent.trim();
+      const type = cells[2].textContent.trim();
+      const status = cells[5].textContent.trim();
+
+      if (statusVal && !status.includes(statusVal)) return false;
+      if (typeVal && !type.includes(typeVal)) return false;
+      if (searchVal && !id.toLowerCase().includes(searchVal) && !type.toLowerCase().includes(searchVal)) return false;
+      return true;
+    });
+
+    currentPage = 1;
+    renderPage();
+  }
+
+  function renderPage() {
+    const tbody = document.getElementById('audit-table-body');
+    // Hide all first
+    allRows.forEach(r => r.style.display = 'none');
+    // Show filtered page
+    const start = (currentPage - 1) * pageSize;
+    const end = start + pageSize;
+    const pageRows = filteredRows.slice(start, end);
+    pageRows.forEach(r => r.style.display = '');
+
+    // Update pagination info
+    totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+    document.getElementById('page-info').textContent = `共 ${filteredRows.length} 条记录`;
+    document.getElementById('page-last').textContent = totalPages;
+
+    // Update active page button
+    document.querySelectorAll('#pagination-bar .page-btn').forEach(btn => btn.classList.remove('active'));
+    const activeBtn = document.getElementById('page-' + currentPage);
+    if (activeBtn) activeBtn.classList.add('active');
+  }
+
+  function goPage(p) {
+    if (p < 1) p = 1;
+    if (p > totalPages) p = totalPages;
+    currentPage = p;
+    renderPage();
+  }
+
+  function changePage(delta) {
+    goPage(currentPage + delta);
+  }
+
+  function batchPass() {
+    const checkboxes = document.querySelectorAll('#audit-table-body input[type="checkbox"]:checked');
+    checkboxes.forEach(cb => {
+      const row = cb.closest('tr');
+      const status = row.querySelector('td:nth-child(6)').textContent.trim();
+      if (status.includes('待审核')) {
+        const id = row.querySelector('td:nth-child(2)').textContent.trim();
+        row.querySelector('td:nth-child(6)').innerHTML = '<span class="tag tag-green">已通过</span>';
+        row.querySelector('td:nth-child(7)').innerHTML = '<a href="#" style="color:var(--accent-hover);">查看详情</a>';
+        addLog(id, '通过', '批量审核通过');
+      }
+    });
+    updateStats();
+    applyFilter();
+  }
+
+  // Init
+  initRows();
 </script>
 
 </body>
