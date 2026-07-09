@@ -213,6 +213,29 @@
 </main>
 
 <script>
+
+  function saveToAudit(typeName, count) {
+    const data = JSON.parse(localStorage.getItem('auditQueue') || '[]');
+    const now = new Date();
+    const dateStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+    const timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+    const maxNum = data.reduce((max, item) => {
+      const m = item.id.match(/SIM-(\d{8})-(\d+)/);
+      return m ? Math.max(max, parseInt(m[2])) : max;
+    }, 0);
+    const baseNum = Math.max(maxNum, 8);
+    for (let i = 0; i < count; i++) {
+      const num = String(baseNum + i + 1).padStart(3, '0');
+      data.push({
+        id: 'SIM-' + dateStr.replace(/-/g,'') + '-' + num,
+        type: typeName,
+        time: dateStr + ' ' + timeStr,
+        status: '待审核'
+      });
+    }
+    localStorage.setItem('auditQueue', JSON.stringify(data));
+  }
+
   function startGenerate() {
     const btn = document.getElementById('gen-btn');
     const progressWrap = document.getElementById('progress-wrap');
@@ -241,6 +264,7 @@
         btn.innerHTML = '🚀 生成轨迹数据';
         genResult.innerHTML = '✅ 生成完成！已导出 1000 条轨迹记录，CSV 格式，含坐标/速度/航向角字段';
         genResult.style.display = 'block';
+        saveToAudit('轨迹数据集', 1);
         setTimeout(() => { progressWrap.style.display = 'none'; }, 800);
       }
     }, 280);

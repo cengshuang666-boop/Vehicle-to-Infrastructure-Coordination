@@ -448,7 +448,30 @@
   let totalPages = 1;
   const pageSize = 5;
 
+
+  function loadGeneratedData() {
+    const data = JSON.parse(localStorage.getItem('auditQueue') || '[]');
+    const tbody = document.getElementById('audit-table-body');
+    data.forEach(item => {
+      const exists = Array.from(tbody.querySelectorAll('tr')).some(r => {
+        const idCell = r.querySelector('td:nth-child(2)');
+        return idCell && idCell.textContent.trim() === item.id;
+      });
+      if (exists) return;
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td><input type="checkbox"></td>' +
+        '<td>' + item.id + '</td>' +
+        '<td>' + item.type + '</td>' +
+        '<td>' + item.time + '</td>' +
+        '<td><span class="tag tag-blue">AI生成</span></td>' +
+        '<td><span class="tag tag-yellow">待审核</span></td>' +
+        '<td><div class="action-btns"><button class="btn btn-success btn-sm" onclick="auditPass(this)">通过</button><button class="btn btn-sm" style="background:var(--red);color:#fff;" onclick="auditReject(this)">拒绝</button></div></td>';
+      tbody.appendChild(tr);
+    });
+  }
+
   function initRows() {
+    loadGeneratedData();
     const tbody = document.getElementById('audit-table-body');
     allRows = Array.from(tbody.querySelectorAll('tr'));
     filteredRows = [...allRows];
