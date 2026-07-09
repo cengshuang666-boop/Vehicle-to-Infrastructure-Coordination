@@ -236,6 +236,7 @@
       <span style="color:var(--text-secondary);font-size:13px;">至</span>
       <input type="date" id="filter-date-end" value="" onchange="applyFilter()">
       <input type="text" id="filter-search" placeholder="搜索内容ID、模态类型..." oninput="applyFilter()">
+      <button class="btn" style="background:var(--bg-hover);color:var(--text-primary);border:1px solid var(--border);" onclick="resetFilter()">⟲ 重置筛选</button>
       <button class="btn btn-success" onclick="batchPass()">✓ 批量通过</button>
     </div>
 
@@ -492,9 +493,9 @@
       if (actionCell.querySelector('.delete-btn')) return;
       const delBtn = document.createElement('button');
       delBtn.className = 'btn btn-sm delete-btn';
-      delBtn.style.cssText = 'background:transparent;color:var(--text-secondary);border:1px solid var(--border);margin-left:6px;font-size:12px;padding:2px 8px;';
-      delBtn.textContent = '🗑';
-      delBtn.title = '删除';
+      delBtn.style.cssText = 'background:rgba(218,54,51,0.1);color:var(--red-text);border:1px solid var(--red);margin-left:6px;font-size:12px;padding:4px 10px;border-radius:4px;';
+      delBtn.textContent = '删除';
+      delBtn.title = '删除记录';
       delBtn.onclick = function() { deleteRow(this); };
       if (actionCell.querySelector('.action-btns')) {
         actionCell.querySelector('.action-btns').appendChild(delBtn);
@@ -509,7 +510,19 @@
     });
   }
 
+  function resetFilter() {
+    document.getElementById('filter-status').value = '';
+    document.getElementById('filter-type').value = '';
+    document.getElementById('filter-date-start').value = '';
+    document.getElementById('filter-date-end').value = '';
+    document.getElementById('filter-search').value = '';
+    applyFilter();
+  }
+
   function initRows() {
+    // Force clear date inputs to prevent browser autofill from filtering out old data
+    document.getElementById('filter-date-start').value = '';
+    document.getElementById('filter-date-end').value = '';
     loadGeneratedData();
     addDeleteButtons();
     const tbody = document.getElementById('audit-table-body');
