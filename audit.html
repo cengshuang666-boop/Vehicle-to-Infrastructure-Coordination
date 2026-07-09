@@ -470,8 +470,48 @@
     });
   }
 
+  function deleteRow(btn) {
+    const row = btn.closest('tr');
+    const id = row.querySelector('td:nth-child(2)').textContent.trim();
+    if (!confirm('确定要删除记录 ' + id + ' 吗？')) return;
+    // Remove from localStorage if exists
+    const data = JSON.parse(localStorage.getItem('auditQueue') || '[]');
+    const filtered = data.filter(item => item.id !== id);
+    localStorage.setItem('auditQueue', JSON.stringify(filtered));
+    // Remove from DOM
+    row.remove();
+    // Re-init
+    initRows();
+  }
+
+  function addDeleteButtons() {
+    const tbody = document.getElementById('audit-table-body');
+    tbody.querySelectorAll('tr').forEach(row => {
+      const actionCell = row.querySelector('td:last-child');
+      if (!actionCell) return;
+      if (actionCell.querySelector('.delete-btn')) return;
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn btn-sm delete-btn';
+      delBtn.style.cssText = 'background:transparent;color:var(--text-secondary);border:1px solid var(--border);margin-left:6px;font-size:12px;padding:2px 8px;';
+      delBtn.textContent = '🗑';
+      delBtn.title = '删除';
+      delBtn.onclick = function() { deleteRow(this); };
+      if (actionCell.querySelector('.action-btns')) {
+        actionCell.querySelector('.action-btns').appendChild(delBtn);
+      } else {
+        const wrap = document.createElement('span');
+        wrap.style.display = 'inline-flex';
+        wrap.style.alignItems = 'center';
+        while (actionCell.firstChild) { wrap.appendChild(actionCell.firstChild); }
+        wrap.appendChild(delBtn);
+        actionCell.appendChild(wrap);
+      }
+    });
+  }
+
   function initRows() {
     loadGeneratedData();
+    addDeleteButtons();
     const tbody = document.getElementById('audit-table-body');
     allRows = Array.from(tbody.querySelectorAll('tr'));
     filteredRows = [...allRows];
@@ -484,6 +524,10 @@
   }
 
   function applyFilter() {
+    // Refresh allRows from current DOM to include dynamically loaded rows
+    const tbody = document.getElementById('audit-table-body');
+    allRows = Array.from(tbody.querySelectorAll('tr'));
+
     const statusVal = document.getElementById('filter-status').value;
     const typeVal = document.getElementById('filter-type').value;
     const searchVal = document.getElementById('filter-search').value.trim().toLowerCase();
