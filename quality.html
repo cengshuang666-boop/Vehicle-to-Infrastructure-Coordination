@@ -79,6 +79,15 @@
     .qual-bar { height:6px; background:var(--bg-hover); border-radius:3px; overflow:hidden; margin-bottom:8px; }
     .qual-fill { height:100%; background:var(--accent); border-radius:3px; }
     .qual-detail { font-size:12px; color:var(--text-secondary); }
+    .data-select { background:var(--bg-hover); border:1px solid var(--border); border-radius:6px; padding:8px 12px; color:var(--text-primary); font-size:14px; outline:none; min-width:320px; cursor:pointer; }
+    .detail-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:16px; margin-top:16px; }
+    .detail-card { background:var(--bg-hover); border:1px solid var(--border); border-radius:8px; padding:16px; }
+    .detail-name { font-size:13px; color:var(--text-secondary); margin-bottom:6px; }
+    .detail-value { font-size:24px; font-weight:700; color:var(--accent-hover); }
+    .detail-bar { height:6px; background:var(--bg-card); border-radius:3px; overflow:hidden; margin-top:8px; }
+    .detail-fill { height:100%; background:var(--accent); border-radius:3px; }
+    .detail-desc { font-size:12px; color:var(--text-secondary); margin-top:6px; }
+    .no-select { color:var(--text-secondary); font-size:13px; padding:20px; text-align:center; }
 
   </style>
 </head>
@@ -174,29 +183,45 @@
     </div>
 
     <div class="panel">
-      <div class="panel-title">最近任务质量评分</div>
-      <div class="qual-grid">
-        <div class="qual-card">
-          <div class="qual-header"><span class="qual-name">Urban_Intersection_024</span><span class="qual-score">91.2</span></div>
-          <div class="qual-bar"><div class="qual-fill" style="width:91.2%;"></div></div>
-          <div class="qual-detail">物理一致性 94 · 视觉真实度 89 · 标注准确率 96 · 多样性 87</div>
+      <div class="panel-title">数据质量评价查询</div>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <select id="quality-select" class="data-select" onchange="showQualityDetail()">
+          <option value="">请选择数据ID查看质量评价</option>
+        </select>
+      </div>
+      <div id="quality-detail" style="display:none;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin:16px 0 12px;">
+          <span style="font-size:15px; font-weight:600;" id="detail-id"></span>
+          <span style="font-size:24px; font-weight:700; color:var(--accent-hover);" id="detail-overall"></span>
         </div>
-        <div class="qual-card">
-          <div class="qual-header"><span class="qual-name">雨雪天气人车混行</span><span class="qual-score">85.7</span></div>
-          <div class="qual-bar"><div class="qual-fill" style="width:85.7%;"></div></div>
-          <div class="qual-detail">物理一致性 88 · 视觉真实度 82 · 标注准确率 91 · 多样性 82</div>
-        </div>
-        <div class="qual-card">
-          <div class="qual-header"><span class="qual-name">标准十字路口三维场景</span><span class="qual-score">93.5</span></div>
-          <div class="qual-bar"><div class="qual-fill" style="width:93.5%;"></div></div>
-          <div class="qual-detail">物理一致性 96 · 视觉真实度 91 · 标注准确率 97 · 多样性 90</div>
-        </div>
-        <div class="qual-card">
-          <div class="qual-header"><span class="qual-name">车辆遮挡对抗场景</span><span class="qual-score">78.4</span></div>
-          <div class="qual-bar"><div class="qual-fill" style="width:78.4%;background:var(--yellow);"></div></div>
-          <div class="qual-detail">物理一致性 82 · 视觉真实度 75 · 标注准确率 88 · 多样性 69</div>
+        <div class="detail-grid">
+          <div class="detail-card">
+            <div class="detail-name">物理一致性</div>
+            <div class="detail-value" id="detail-physics"></div>
+            <div class="detail-bar"><div class="detail-fill" id="bar-physics"></div></div>
+            <div class="detail-desc">仿真场景是否符合真实物理规律</div>
+          </div>
+          <div class="detail-card">
+            <div class="detail-name">视觉真实度</div>
+            <div class="detail-value" id="detail-visual"></div>
+            <div class="detail-bar"><div class="detail-fill" id="bar-visual"></div></div>
+            <div class="detail-desc">生成图像/视频的视觉质量</div>
+          </div>
+          <div class="detail-card">
+            <div class="detail-name">标注准确率</div>
+            <div class="detail-value" id="detail-annotation"></div>
+            <div class="detail-bar"><div class="detail-fill" id="bar-annotation"></div></div>
+            <div class="detail-desc">自动标注与真值的一致性</div>
+          </div>
+          <div class="detail-card">
+            <div class="detail-name">多样性</div>
+            <div class="detail-value" id="detail-diversity"></div>
+            <div class="detail-bar"><div class="detail-fill" id="bar-diversity"></div></div>
+            <div class="detail-desc">场景覆盖度与丰富程度</div>
+          </div>
         </div>
       </div>
+      <div class="no-select" id="quality-placeholder">请选择一条数据以查看详细质量评价</div>
     </div>
 
     <div class="panel">
@@ -212,5 +237,82 @@
   </div>
 </main>
 
+<script>
+  function populateQualitySelect() {
+    const select = document.getElementById('quality-select');
+    // Load from auditQueue for IDs and types
+    const auditData = JSON.parse(localStorage.getItem('auditQueue') || '[]');
+    const qualityData = JSON.parse(localStorage.getItem('qualityData') || '{}');
+    // Also add static IDs with hardcoded scores
+    const staticIds = [
+      {id:'SIM-20250708-001', type:'道路仿真图像'},
+      {id:'SIM-20250708-002', type:'仿真路况视频'},
+      {id:'SIM-20250708-003', type:'三维交通场景'},
+      {id:'SIM-20250708-004', type:'轨迹数据集'},
+      {id:'SIM-20250708-005', type:'道路仿真图像'},
+      {id:'SIM-20250707-089', type:'仿真路况视频'},
+      {id:'SIM-20250707-088', type:'三维交通场景'},
+      {id:'SIM-20250707-087', type:'轨迹数据集'}
+    ];
+    const allItems = [...staticIds, ...auditData];
+    const existingOptions = Array.from(select.options).map(o => o.value);
+    allItems.forEach(item => {
+      if (existingOptions.includes(item.id)) return;
+      const opt = document.createElement('option');
+      opt.value = item.id;
+      opt.textContent = item.id + ' (' + item.type + ')';
+      select.appendChild(opt);
+    });
+    // Ensure static quality data exists
+    const qd = JSON.parse(localStorage.getItem('qualityData') || '{}');
+    const staticScores = {
+      'SIM-20250708-001': {overall:91.2, physics:94, visual:89, annotation:96, diversity:87},
+      'SIM-20250708-002': {overall:85.7, physics:88, visual:82, annotation:91, diversity:82},
+      'SIM-20250708-003': {overall:93.5, physics:96, visual:91, annotation:97, diversity:90},
+      'SIM-20250708-004': {overall:78.4, physics:82, visual:75, annotation:88, diversity:69},
+      'SIM-20250708-005': {overall:82.3, physics:85, visual:80, annotation:90, diversity:74},
+      'SIM-20250707-089': {overall:88.6, physics:91, visual:85, annotation:94, diversity:84},
+      'SIM-20250707-088': {overall:90.1, physics:93, visual:88, annotation:95, diversity:85},
+      'SIM-20250707-087': {overall:86.9, physics:89, visual:84, annotation:92, diversity:83}
+    };
+    Object.keys(staticScores).forEach(id => {
+      if (!qd[id]) qd[id] = staticScores[id];
+    });
+    localStorage.setItem('qualityData', JSON.stringify(qd));
+  }
+
+  function showQualityDetail() {
+    const select = document.getElementById('quality-select');
+    const detail = document.getElementById('quality-detail');
+    const placeholder = document.getElementById('quality-placeholder');
+    const id = select.value;
+    if (!id) {
+      detail.style.display = 'none';
+      placeholder.style.display = 'block';
+      return;
+    }
+    const qd = JSON.parse(localStorage.getItem('qualityData') || '{}');
+    const q = qd[id];
+    if (!q) {
+      detail.style.display = 'none';
+      placeholder.style.display = 'block';
+      return;
+    }
+    document.getElementById('detail-id').textContent = id;
+    document.getElementById('detail-overall').textContent = q.overall;
+    document.getElementById('detail-physics').textContent = q.physics;
+    document.getElementById('bar-physics').style.width = q.physics + '%';
+    document.getElementById('detail-visual').textContent = q.visual;
+    document.getElementById('bar-visual').style.width = q.visual + '%';
+    document.getElementById('detail-annotation').textContent = q.annotation;
+    document.getElementById('bar-annotation').style.width = q.annotation + '%';
+    document.getElementById('detail-diversity').textContent = q.diversity;
+    document.getElementById('bar-diversity').style.width = q.diversity + '%';
+    detail.style.display = 'block';
+    placeholder.style.display = 'none';
+  }
+
+  populateQualitySelect();
+</script>
 </body>
 </html>

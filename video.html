@@ -238,6 +238,20 @@
         status: '待审核'
       });
     }
+    // Save quality scores
+    const qualityData = JSON.parse(localStorage.getItem('qualityData') || '{}');
+    for (let i = 0; i < count; i++) {
+      const num = String(baseNum + i + 1).padStart(3, '0');
+      const qid = 'SIM-' + dateStr.replace(/-/g,'') + '-' + num;
+      qualityData[qid] = {
+        overall: (80 + Math.random() * 18).toFixed(1),
+        physics: Math.floor(80 + Math.random() * 20),
+        visual: Math.floor(75 + Math.random() * 25),
+        annotation: Math.floor(85 + Math.random() * 15),
+        diversity: Math.floor(70 + Math.random() * 30)
+      };
+    }
+    localStorage.setItem('qualityData', JSON.stringify(qualityData));
     localStorage.setItem('auditQueue', JSON.stringify(data));
   }
 
